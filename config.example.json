@@ -1,0 +1,13 @@
+{
+  "strategies": [
+    {
+      "name": "erc20-votes",
+      "params": {
+        "symbol": "EXMPL",
+        "address": "0x0000000000000000000000000000000000000000",
+        "decimals": 18
+      }
+    }
+  ],
+  "spaceId": "example.eth"
+}

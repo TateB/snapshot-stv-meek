@@ -1,0 +1,16 @@
+{
+  "name": "snapshot-stv-counter",
+  "version": "1.0.0",
+  "description": "Counts snapshot ranked choice voting with the STV (Single Transferable Vote) Meek system.",
+  "main": "index.mjs",
+  "scripts": {
+    "start": "node --experimental-json-modules index.mjs"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@snapshot-labs/snapshot.js": "^0.3.26",
+    "caritat": "0.0.4",
+    "node-fetch": "^3.1.0"
+  }
+}
