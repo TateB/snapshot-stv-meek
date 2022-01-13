@@ -9,5 +9,6 @@
       }
     }
   ],
-  "spaceId": "example.eth"
+  "spaceId": "example.eth",
+  "seatsToFill": 3
 }

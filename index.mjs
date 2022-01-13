@@ -12,6 +12,7 @@ const snapshotAPI = "https://hub.snapshot.org/graphql";
 
 const spaceID = config.spaceId;
 const strategies = config.strategies;
+const seatsToFill = config.seatsToFill;
 
 const snapshotProposalsQuery = (
   await fetch(snapshotAPI, {
@@ -112,19 +113,19 @@ async function countElectionVotes({ id, title, candidates, end }) {
     election.addBallot(new Ballot(choiceToSend, voteWeights[address]));
   });
 
-  const winnersCalculation = meek(election, { seats: 3 });
+  const winnersCalculation = meek(election, { seats: seatsToFill });
   const winners = winnersCalculation
     .slice(0, 3)
     .map((candidate) => candidates[candidate - 1]);
-  const _finalStandings =
+  const _prevStandings =
     winnersCalculation.log[winnersCalculation.log.length - 1].candidates;
 
-  console.log("FINAL STANDINGS:", _finalStandings, winners);
+  console.log("final standings", winners);
 
-  const finalStandings = Object.keys(_finalStandings).map((candidate) => ({
+  const prevStandings = Object.keys(_prevStandings).map((candidate) => ({
     name: candidates[candidate - 1],
-    votes: _finalStandings[candidate].votes,
-    status: _finalStandings[candidate].status,
+    votes: _prevStandings[candidate].votes,
+    status: _prevStandings[candidate].status,
   }));
 
   return {
@@ -134,7 +135,7 @@ async function countElectionVotes({ id, title, candidates, end }) {
       candidates,
       end,
       winners,
-      finalStandings,
+      prevStandings,
     },
     fullLog: winnersCalculation.log,
   };
