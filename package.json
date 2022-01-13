@@ -1,5 +1,5 @@
 {
-  "name": "snapshot-stv-counter",
+  "name": "snapshot-stv",
   "version": "1.0.0",
   "description": "Counts snapshot ranked choice voting with the STV (Single Transferable Vote) Meek system.",
   "main": "index.mjs",
