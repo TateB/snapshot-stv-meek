@@ -115,12 +115,12 @@ async function countElectionVotes({ id, title, candidates, end }) {
 
   const winnersCalculation = meek(election, { seats: seatsToFill });
   const winners = winnersCalculation
-    .slice(0, 3)
+    .slice(0, seatsToFill)
     .map((candidate) => candidates[candidate - 1]);
   const _prevStandings =
     winnersCalculation.log[winnersCalculation.log.length - 1].candidates;
 
-  console.log("final standings", winners);
+  console.log(title, "final standings", winners);
 
   const prevStandings = Object.keys(_prevStandings).map((candidate) => ({
     name: candidates[candidate - 1],
