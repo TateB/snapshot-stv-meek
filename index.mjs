@@ -122,11 +122,29 @@ async function countElectionVotes({ id, title, candidates, end }) {
 
   console.log(title, "final standings", winners);
 
-  const prevStandings = Object.keys(_prevStandings).map((candidate) => ({
-    name: candidates[candidate - 1],
-    votes: _prevStandings[candidate].votes,
-    status: _prevStandings[candidate].status,
-  }));
+  const prevStandings = Object.keys(_prevStandings)
+    .map((candidate) => ({
+      name: candidates[candidate - 1],
+      votes: _prevStandings[candidate].votes,
+      status: _prevStandings[candidate].status,
+    }))
+    .sort((a, b) => b.votes - a.votes);
+
+  const markdown = `
+    ### ${title}
+    **Final Standings**
+    ${prevStandings
+      .map(
+        (candidate) =>
+          `* ${
+            candidate.name + candidate.status === "elected" ? "**" : ""
+          } (${candidate.votes.toLocaleString("en-US", {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2,
+          })} votes)${candidate.status === "elected" ? " - Elected**" : ""}`
+      )
+      .join("  ")}
+      `;
 
   return {
     details: {
@@ -136,6 +154,7 @@ async function countElectionVotes({ id, title, candidates, end }) {
       end,
       winners,
       prevStandings,
+      markdown,
     },
     fullLog: winnersCalculation.log,
   };
