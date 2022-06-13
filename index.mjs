@@ -1,8 +1,8 @@
-import fetch from "node-fetch";
+import snapshot from "@snapshot-labs/snapshot.js";
 import Caritat from "caritat";
 import { writeFile } from "fs/promises";
-import snapshot from "@snapshot-labs/snapshot.js";
-import config from "./config.json";
+import fetch from "node-fetch";
+import config from "./config.json" assert { type: "json" };
 
 const Election = Caritat.Election;
 const meek = Caritat.stv.meek;
@@ -44,10 +44,11 @@ const snapshotProposalsQuery = (
   }).then((res) => res.json())
 ).data.proposals
   .filter((proposal) => proposal.title.toLowerCase().includes("election"))
+  .splice(0, 4)
   .map((proposal) => ({
     id: proposal.id,
     title: proposal.title,
-    candidates: proposal.choices.slice(0, proposal.choices.length - 1), // remove the "no vote" choice
+    candidates: proposal.choices, // remove the "no vote" choice
     end: proposal.end,
   }));
 
@@ -137,7 +138,7 @@ async function countElectionVotes({ id, title, candidates, end }) {
       .map(
         (candidate) =>
           `* ${
-            candidate.name + candidate.status === "elected" ? "**" : ""
+            candidate.name + (candidate.status === "elected" ? "**" : "")
           } (${candidate.votes.toLocaleString("en-US", {
             minimumFractionDigits: 2,
             maximumFractionDigits: 2,
