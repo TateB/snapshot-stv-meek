@@ -47,7 +47,11 @@ const snapshotProposalsQuery = (
     }),
   }).then((res) => res.json())
 ).data.proposals
-  .filter((proposal) => proposal.title.toLowerCase().includes("election"))
+  .filter(
+    (proposal) =>
+      proposal.title.toLowerCase().includes("election") &&
+      proposal.title.toLowerCase().includes("q1/q2")
+  )
   .splice(0, 4)
   .map((proposal) => ({
     id: proposal.id,
