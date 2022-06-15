@@ -14,6 +14,11 @@ const spaceID = config.spaceId;
 const strategies = config.strategies;
 const seatsToFill = config.seatsToFill;
 
+const args = process.argv.slice(2);
+const asCurrent = args.includes("--current");
+
+const currentList = ["1st", "2nd", "3rd"];
+
 const snapshotProposalsQuery = (
   await fetch(snapshotAPI, {
     method: "POST",
@@ -62,6 +67,14 @@ Promise.all(snapshotProposalsQuery.map(countElectionVotes))
       writeFile(
         "resultlogs.json",
         JSON.stringify(results.map((r) => r.fullLog))
+      ),
+      writeFile(
+        "resultmarkdown.md",
+        `# ${
+          asCurrent ? "Current Standings" : "Final Standings"
+        }\n*as of ${new Date().toUTCString()}*\n${results
+          .map((r) => r.details.markdown)
+          .join("\n")}`
       ),
     ])
   )
@@ -131,20 +144,23 @@ async function countElectionVotes({ id, title, candidates, end }) {
     }))
     .sort((a, b) => b.votes - a.votes);
 
-  const markdown = `
-    ### ${title}
-    **Final Standings**
-    ${prevStandings
-      .map(
-        (candidate) =>
-          `* ${
-            candidate.name + (candidate.status === "elected" ? "**" : "")
-          } (${candidate.votes.toLocaleString("en-US", {
-            minimumFractionDigits: 2,
-            maximumFractionDigits: 2,
-          })} votes)${candidate.status === "elected" ? " - Elected**" : ""}`
-      )
-      .join("  ")}
+  const markdown = `### ${title.split("Steward")[0]} \n  ${prevStandings
+    .map(
+      (candidate, i) =>
+        `* ${
+          candidate.name + (candidate.status === "elected" ? " **" : " ")
+        }(${candidate.votes.toLocaleString("en-US", {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2,
+        })} votes)${
+          candidate.status === "elected"
+            ? asCurrent
+              ? ` - ${currentList[i]}**`
+              : " - Elected**"
+            : ""
+        }\n`
+    )
+    .join("  ")}
       `;
 
   return {
