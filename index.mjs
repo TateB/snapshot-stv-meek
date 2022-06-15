@@ -1,6 +1,6 @@
-import snapshot from "@snapshot-labs/snapshot.js";
 import Caritat from "caritat";
-import { writeFile } from "fs/promises";
+import { existsSync } from "fs";
+import { mkdir, writeFile } from "fs/promises";
 import fetch from "node-fetch";
 import config from "./config.json" assert { type: "json" };
 
@@ -11,7 +11,6 @@ const Ballot = Caritat.Ballot;
 const snapshotAPI = "https://hub.snapshot.org/graphql";
 
 const spaceID = config.spaceId;
-const strategies = config.strategies;
 const seatsToFill = config.seatsToFill;
 
 const args = process.argv.slice(2);
@@ -57,29 +56,6 @@ const snapshotProposalsQuery = (
     end: proposal.end,
   }));
 
-Promise.all(snapshotProposalsQuery.map(countElectionVotes))
-  .then((results) =>
-    Promise.all([
-      writeFile(
-        "finalresults.json",
-        JSON.stringify(results.map((r) => r.details))
-      ),
-      writeFile(
-        "resultlogs.json",
-        JSON.stringify(results.map((r) => r.fullLog))
-      ),
-      writeFile(
-        "resultmarkdown.md",
-        `# ${
-          asCurrent ? "Current Standings" : "Final Standings"
-        }\n*as of ${new Date().toUTCString()}*\n${results
-          .map((r) => r.details.markdown)
-          .join("\n")}`
-      ),
-    ])
-  )
-  .then(() => console.log("done"));
-
 async function countElectionVotes({ id, title, candidates, end }) {
   console.log("COUNTING FOR", id);
 
@@ -108,23 +84,20 @@ async function countElectionVotes({ id, title, candidates, end }) {
               ) {
                 choice
                 voter
+                vp
               }
             }`,
       }),
     }).then((res) => res.json())
-  ).data.votes.map((voter) => ({ address: voter.voter, choice: voter.choice }));
+  ).data.votes.map((voter) => ({
+    address: voter.voter,
+    choice: voter.choice,
+    weight: voter.vp,
+  }));
 
-  const _voteWeights = await snapshot.utils.getScores(
-    "ens.eth",
-    strategies,
-    "1",
-    electionResultsQuery.map((voter) => voter.address)
-  );
-  const voteWeights = _voteWeights[0];
-
-  electionResultsQuery.forEach(({ address, choice }) => {
+  electionResultsQuery.forEach(({ choice, weight }) => {
     const choiceToSend = choice.map((c) => c.toString());
-    election.addBallot(new Ballot(choiceToSend, voteWeights[address]));
+    election.addBallot(new Ballot(choiceToSend, weight));
   });
 
   const winnersCalculation = meek(election, { seats: seatsToFill });
@@ -176,3 +149,34 @@ async function countElectionVotes({ id, title, candidates, end }) {
     fullLog: winnersCalculation.log,
   };
 }
+
+const main = async () => {
+  if (!existsSync("./results")) {
+    await mkdir("./results");
+  }
+
+  await Promise.all(snapshotProposalsQuery.map(countElectionVotes))
+    .then((results) =>
+      Promise.all([
+        writeFile(
+          "results/final.json",
+          JSON.stringify(results.map((r) => r.details))
+        ),
+        writeFile(
+          "results/logs.json",
+          JSON.stringify(results.map((r) => r.fullLog))
+        ),
+        writeFile(
+          "results/post.md",
+          `# ${
+            asCurrent ? "Current Standings" : "Final Standings"
+          }\n*as of ${new Date().toUTCString()}*\n${results
+            .map((r) => r.details.markdown)
+            .join("\n")}`
+        ),
+      ])
+    )
+    .then(() => console.log("done"));
+};
+
+main();

@@ -1,5 +1,2 @@
 /node_modules
-resultlogs.json
-finalresults.json
-config.json
-resultmarkdown.md
+/results
